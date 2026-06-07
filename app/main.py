@@ -1,6 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
 from contextlib import asynccontextmanager
 import logging
+import os
+import time
+import asyncio
+from pyinstrument import Profiler
+from app.config import settings
 from app.db import Database
 from app.routes import auth, notifications, candidates, swipes, match
 
@@ -23,6 +29,56 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+@app.middleware("http")
+async def profile_request(request: Request, call_next):
+    # Determine if request profiling is enabled
+    profile_param = request.query_params.get("profile")
+    should_profile = False
+    
+    if settings.PROFILING_SECRET:
+        should_profile = (profile_param == settings.PROFILING_SECRET)
+    else:
+        # Fallback to simple query param in dev if no secret is configured
+        should_profile = (profile_param == "true")
+        
+    if should_profile:
+        profiler = Profiler(async_mode="enabled")
+        profiler.start()
+        
+        response = await call_next(request)
+        
+        profiler.stop()
+        
+        profile_dir = os.getenv("PROFILE_DIR")
+        if profile_dir:
+            os.makedirs(profile_dir, exist_ok=True)
+            # Create a safe filename (e.g. GET_api_v1_candidates_1717800000)
+            safe_path = request.url.path.strip("/").replace("/", "_") or "root"
+            timestamp = int(time.time() * 1000)
+            filename = f"{request.method}_{safe_path}_{timestamp}"
+            
+            # Offload CPU-bound profiling text and HTML generation to thread pool
+            html_content = await asyncio.to_thread(profiler.output_html)
+            text_content = await asyncio.to_thread(profiler.output_text)
+            
+            # Write HTML report
+            html_path = os.path.join(profile_dir, f"{filename}.html")
+            with open(html_path, "w", encoding="utf-8") as f:
+                f.write(html_content)
+                
+            # Write text report for parsing/analysis
+            text_path = os.path.join(profile_dir, f"{filename}.txt")
+            with open(text_path, "w", encoding="utf-8") as f:
+                f.write(text_content)
+                
+            return response
+        else:
+            # Return an interactive HTML report directly in the browser
+            html_content = await asyncio.to_thread(profiler.output_html)
+            return HTMLResponse(html_content)
+    
+    return await call_next(request)
 
 # Register routers
 app.include_router(auth.router)

@@ -23,6 +23,11 @@ export default function () {
     },
   };
 
+  // Determine randomly whether this VU iteration should trigger request profiling (e.g., 1% chance)
+  const shouldProfile = Math.random() < 0.01;
+  const profilingSecret = __ENV.PROFILING_SECRET || 'true';
+  const profileQ = shouldProfile ? `?profile=${profilingSecret}` : '';
+
   // Step 0: Register/Login the user so they exist in the database.
   // This ensures GET /candidates doesn't return 404.
   const registerPayload = JSON.stringify({
@@ -31,7 +36,7 @@ export default function () {
     riot_id_tag: 'NA1'
   });
   
-  let registerRes = http.post(`${BASE_URL}/auth/token`, registerPayload, {
+  let registerRes = http.post(`${BASE_URL}/auth/token${profileQ}`, registerPayload, {
     headers: { 'Content-Type': 'application/json' }
   });
   
@@ -40,7 +45,7 @@ export default function () {
   });
 
   // Step 1: Query candidates
-  let res = http.get(`${BASE_URL}/candidates`, params);
+  let res = http.get(`${BASE_URL}/candidates${profileQ}`, params);
   check(res, { 'candidates fetched': (r) => r.status === 200 });
   sleep(1);
 
@@ -49,7 +54,7 @@ export default function () {
   const partnerNum = isUserA ? userNum + 1 : userNum - 1;
   const partnerId = `usr_${partnerNum}`;
   
-  let swipeRes = http.post(`${BASE_URL}/swipes`, JSON.stringify({
+  let swipeRes = http.post(`${BASE_URL}/swipes${profileQ}`, JSON.stringify({
     target_user_id: partnerId,
     action: 'LIKE'
   }), params);
@@ -64,7 +69,7 @@ export default function () {
     if (matched && proposalId) {
       // Step 3: Complete handshake within 30-second limit
       sleep(1); // Simulate human delay
-      let respondRes = http.post(`${BASE_URL}/match/respond`, JSON.stringify({
+      let respondRes = http.post(`${BASE_URL}/match/respond${profileQ}`, JSON.stringify({
         proposal_id: proposalId,
         action: 'ACCEPT'
       }), params);

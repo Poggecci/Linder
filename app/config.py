@@ -22,11 +22,15 @@ class Settings(BaseSettings):
     # Riot Games API Configuration
     RIOT_API_KEY: Optional[str] = None
     RIOT_REGION: str = "na1"
+    RIOT_API_BASE_URL: str = "https://{region}.api.riotgames.com"
     
     # Web Push VAPID Configuration
     VAPID_PRIVATE_KEY: Optional[str] = None
     VAPID_PUBLIC_KEY: Optional[str] = None
     VAPID_CLAIMS_EMAIL: str = "mailto:admin@linder.app"
+    
+    # Security/Profiling Settings
+    PROFILING_SECRET: Optional[str] = None
     
     # Model configuration
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")

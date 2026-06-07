@@ -23,3 +23,6 @@ venv/
 
 # Environment variables
 .env
+
+# Past profiles
+profiles/

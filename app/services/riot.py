@@ -25,7 +25,8 @@ class ProductionRiotClient(RiotClient):
             logger.error("Riot API Key is not configured.")
             return None
         
-        url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
+        base_url = settings.RIOT_API_BASE_URL.format(region=region) if "{region}" in settings.RIOT_API_BASE_URL else settings.RIOT_API_BASE_URL
+        url = f"{base_url}/lol/match/v5/matches/by-puuid/{puuid}/ids"
         headers = {"X-Riot-Token": self.api_key}
         params = {"start": 0, "count": 1}
         
@@ -51,7 +52,8 @@ class ProductionRiotClient(RiotClient):
             logger.info(f"Match {match_id} retrieved from cache.")
             return cached_match
 
-        url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/{match_id}"
+        base_url = settings.RIOT_API_BASE_URL.format(region=region) if "{region}" in settings.RIOT_API_BASE_URL else settings.RIOT_API_BASE_URL
+        url = f"{base_url}/lol/match/v5/matches/{match_id}"
         headers = {"X-Riot-Token": self.api_key}
         
         try:
