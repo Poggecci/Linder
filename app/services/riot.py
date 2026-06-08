@@ -25,6 +25,12 @@ class ProductionRiotClient(RiotClient):
             logger.error("Riot API Key is not configured.")
             return None
         
+        cache_key = f"riot:latest_match:{puuid}"
+        cached_match_id = await riot_cache.get(cache_key)
+        if cached_match_id:
+            logger.info(f"Latest match ID for PUUID {puuid} retrieved from cache.")
+            return cached_match_id
+        
         base_url = settings.RIOT_API_BASE_URL.format(region=region) if "{region}" in settings.RIOT_API_BASE_URL else settings.RIOT_API_BASE_URL
         url = f"{base_url}/lol/match/v5/matches/by-puuid/{puuid}/ids"
         headers = {"X-Riot-Token": self.api_key}
@@ -35,7 +41,9 @@ class ProductionRiotClient(RiotClient):
             response.raise_for_status()
             match_ids = response.json()
             if isinstance(match_ids, list) and len(match_ids) > 0:
-                return match_ids[0]
+                match_id = match_ids[0]
+                await riot_cache.set(cache_key, match_id, ttl=60)
+                return match_id
             return None
         except Exception as e:
             logger.error(f"Error fetching latest match ID for PUUID {puuid}: {e}")
