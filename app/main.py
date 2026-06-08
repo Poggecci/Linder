@@ -80,6 +80,17 @@ async def profile_request(request: Request, call_next):
     
     return await call_next(request)
 
+from fastapi.middleware.cors import CORSMiddleware
+
+# Register CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Register routers
 app.include_router(auth.router)
 app.include_router(notifications.router)

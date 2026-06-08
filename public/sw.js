@@ -25,7 +25,7 @@ self.addEventListener('push', (event) => {
                 // present a system notification.
                 return self.registration.showNotification('Linder: Match Found!', {
                     body: 'A player from your last match wants to connect. You have 30 seconds to join!',
-                    icon: '/icon-192.png',
+                    icon: 'icon-192.png',
                     tag: 'match-proposal', // Prevents double alerting
                     data: { proposal_id: data.proposal_id }
                 });
@@ -38,10 +38,11 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     const proposalId = event.notification.data.proposal_id;
-    const targetUrl = `/match/accept?id=${proposalId}`;
+    // Base url and hash routing to prevent 404 on GitHub Pages
+    const targetUrl = `/linder/#/?id=${proposalId}`;
 
     event.waitUntil(
-        self.clients.matchAll({ type: 'window' }).then((clientList) => {
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
             // Find existing open tab and redirect
             for (const client of clientList) {
                 if (client.url && 'focus' in client) {
