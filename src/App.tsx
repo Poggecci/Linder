@@ -114,8 +114,10 @@ export default function App() {
 
   // Base API path
   const getApiUrl = (path: string) => {
-    // Vite Dev Server proxies /api to localhost:8000. For production, it fetches relative to current domain
-    return path
+    const apiBase = import.meta.env.VITE_API_URL || ''
+    const base = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`
+    return `${base}${normalizedPath}`
   }
 
   // Fetch API headers

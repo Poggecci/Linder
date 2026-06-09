@@ -85,7 +85,12 @@ from fastapi.middleware.cors import CORSMiddleware
 # Register CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://poggecci.github.io",
+        "https://nm84lt5f-65525.usw3.devtunnels.ms",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
