@@ -433,14 +433,13 @@ interface LoginProps {
 }
 
 function LoginScreen({ setToken, setUserId, setRiotId, getApiUrl, showToast }: LoginProps) {
-  const [puuid, setPuuid] = useState('')
   const [riotName, setRiotName] = useState('')
   const [riotTag, setRiotTag] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!puuid || !riotName || !riotTag) {
+    if (!riotName || !riotTag) {
       showToast("Please fill all fields", "error")
       return
     }
@@ -451,7 +450,6 @@ function LoginScreen({ setToken, setUserId, setRiotId, getApiUrl, showToast }: L
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          puuid,
           riot_id_name: riotName,
           riot_id_tag: riotTag
         })
@@ -488,17 +486,6 @@ function LoginScreen({ setToken, setUserId, setRiotId, getApiUrl, showToast }: L
 
       <div className="glass-panel">
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-          <div className="form-group">
-            <label className="form-label">Riot PUUID</label>
-            <input 
-              className="text-input" 
-              type="text" 
-              placeholder="e.g. puuid_faker" 
-              value={puuid}
-              onChange={(e) => setPuuid(e.target.value)}
-              disabled={loading}
-            />
-          </div>
           
           <div style={{ display: 'flex', gap: '12px' }}>
             <div className="form-group" style={{ flex: 2 }}>

@@ -15,6 +15,9 @@ class RiotClient:
     async def get_match_details(self, match_id: str, region: str = settings.RIOT_REGION) -> Optional[Dict[str, Any]]:
         raise NotImplementedError()
 
+    async def get_puuid_by_riot_id(self, game_name: str, tagline: str) -> Optional[str]:
+        raise NotImplementedError()
+
 class ProductionRiotClient(RiotClient):
     def __init__(self, api_key: str = settings.RIOT_API_KEY):
         self.api_key = api_key
@@ -73,6 +76,29 @@ class ProductionRiotClient(RiotClient):
             return match_details
         except Exception as e:
             logger.error(f"Error fetching match details for match {match_id}: {e}")
+            return None
+
+    async def get_puuid_by_riot_id(self, game_name: str, tagline: str) -> Optional[str]:
+        if not self.api_key:
+            logger.error("Riot API Key is not configured.")
+            return None
+        
+        region_map = {
+            "na1": "americas", "br1": "americas", "la1": "americas", "la2": "americas", "oc1": "americas",
+            "euw1": "europe", "eun1": "europe", "tr1": "europe", "ru": "europe",
+            "kr": "asia", "jp1": "asia",
+            "sg2": "sea", "tw2": "sea", "ph2": "sea", "th2": "sea", "vn2": "sea"
+        }
+        routing_region = region_map.get(settings.RIOT_REGION.lower(), "americas")
+        url = f"https://{routing_region}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tagline}"
+        headers = {"X-Riot-Token": self.api_key}
+        
+        try:
+            response = await self.http_client.get(url, headers=headers)
+            response.raise_for_status()
+            return response.json().get("puuid")
+        except Exception as e:
+            logger.error(f"Error fetching PUUID for Riot ID {game_name}#{tagline}: {e}")
             return None
 
 class MockRiotClient(RiotClient):
@@ -173,3 +199,19 @@ class MockRiotClient(RiotClient):
             except Exception:
                 pass
         return self.mock_matches.get(match_id)
+
+    async def get_puuid_by_riot_id(self, game_name: str, tagline: str) -> Optional[str]:
+        name_lower = game_name.lower()
+        if name_lower.startswith("user_"):
+            try:
+                vu_id = name_lower.split("_")[-1]
+                return f"puuid_user_{vu_id}"
+            except Exception:
+                pass
+        if name_lower == "faker":
+            return "puuid_faker"
+        if name_lower == "caps":
+            return "puuid_caps"
+        if name_lower == "showmaker":
+            return "puuid_showmaker"
+        return f"puuid_{name_lower}"
