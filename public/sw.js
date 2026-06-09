@@ -39,7 +39,7 @@ self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     const proposalId = event.notification.data.proposal_id;
     // Base url and hash routing to prevent 404 on GitHub Pages
-    const targetUrl = `/linder/#/?id=${proposalId}`;
+    const targetUrl = `/Linder/#/?id=${proposalId}`;
 
     event.waitUntil(
         self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {

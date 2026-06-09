@@ -136,7 +136,7 @@ export default function App() {
     const registerSW = async () => {
       if ('serviceWorker' in navigator) {
         try {
-          const base = import.meta.env.BASE_URL || '/linder/'
+          const base = import.meta.env.BASE_URL || '/Linder/'
           const reg = await navigator.serviceWorker.register(`${base}sw.js`, { scope: base })
           console.log('Service Worker registered successfully with scope:', reg.scope)
           setSwRegistration(reg)
